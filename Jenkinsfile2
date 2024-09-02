@@ -1,0 +1,86 @@
+pipeline {
+    agent any
+
+    environment {
+        // Define environment variables for email notifications
+        EMAIL_RECIPIENT = 'pranav27rajans@gmail.com'
+    }
+
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building...'
+                // Replace with your actual build tool and command
+                sh 'mvn clean package'  // For Maven (Java)
+                // sh 'npm install'     // For Node.js
+            }
+        }
+
+        stage('Unit and Integration Tests') {
+            steps {
+                echo 'Running unit and integration tests...'
+                // Replace with your actual test tool and command
+                sh 'mvn test'          // For Maven (Java)
+                // sh 'npm test'        // For Node.js
+            }
+        }
+
+        stage('Code Analysis') {
+            steps {
+                echo 'Performing code analysis...'
+                // Replace with your actual code analysis tool and command
+                sh 'sonar-scanner'     // Example for SonarQube
+            }
+        }
+
+        stage('Security Scan') {
+            steps {
+                echo 'Performing security scan...'
+                // Replace with your actual security scan tool and command
+                sh 'npm audit'         // Example for Node.js
+                // sh 'sonar-scanner -Dsonar.analysis.mode=preview' // Example for SonarQube
+            }
+        }
+
+        stage('Deploy to Staging') {
+            steps {
+                echo 'Deploying to staging...'
+                // Replace with your actual deployment command
+                sh './deploy-staging.sh' // Custom deployment script
+            }
+        }
+
+        stage('Integration Tests on Staging') {
+            steps {
+                echo 'Running integration tests on staging...'
+                // Replace with your actual integration test tool and command
+                sh 'npm test'          // Example for Node.js
+            }
+        }
+
+        stage('Deploy to Production') {
+            steps {
+                echo 'Deploying to production...'
+                // Replace with your actual deployment command
+                sh './deploy-production.sh' // Custom deployment script
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'This will always run after the pipeline stages'
+        }
+        success {
+            mail to: "${EMAIL_RECIPIENT}",
+                 subject: "Pipeline Success: ${env.JOB_NAME} ${env.BUILD_NUMBER}",
+                 body: "The pipeline was successful.\n\nJob URL: ${env.BUILD_URL}"
+        }
+        failure {
+            mail to: "${EMAIL_RECIPIENT}",
+                 subject: "Pipeline Failure: ${env.JOB_NAME} ${env.BUILD_NUMBER}",
+                 body: "The pipeline failed.\n\nJob URL: ${env.BUILD_URL}",
+                 attachmentsPattern: '**/test-results/*.xml' // Attach test results
+        }
+    }
+}
