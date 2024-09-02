@@ -70,7 +70,7 @@ pipeline {
                     archiveArtifacts artifacts: 'npm-audit-report.txt', allowEmptyArchive: true
                     mail to: "$EMAIL_RECIPIENTS",
                          subject: "Security Scan Completed - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                         body: "Security scan completed in stage: ${env.STAGE_NAME}",
+                         body: "Security scan completed in stage: ${env.STAGE_NAME}"}
                          attachmentsPattern: '**/npm-audit-report.json'
                          body: "Security scan completed in stage: ${env.STAGE_NAME}. See the attached report."}
                          attachLog: true
