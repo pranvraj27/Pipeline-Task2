@@ -105,9 +105,11 @@ pipeline {
                 script {
                     // Deploy to production server
                     sh 'scp -r ./dist user@production-server:/path/to/deploy'
-                }
+                 }
             }
         }
+    }
+
     post {
         always {
             // Send an email notification
