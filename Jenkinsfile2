@@ -108,8 +108,6 @@ pipeline {
                 }
             }
         }
-    }
-
     post {
         always {
             // Send an email notification
