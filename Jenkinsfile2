@@ -69,7 +69,6 @@ pipeline {
             }
         }
     }
-
     post {
         always {
             echo 'Pipeline completed. Sending final status email...'
@@ -77,7 +76,7 @@ pipeline {
                 to: "${EMAIL_RECIPIENTS}",
                 subject: "Pipeline Status: ${currentBuild.currentResult}",
                 body: "The pipeline ${env.JOB_NAME} - build ${env.BUILD_NUMBER} has finished with status ${currentBuild.currentResult}.",
-                attachLog: true
+                attachLog: true // Attach build log
             )
             echo 'Cleaning up workspace...'
             cleanWs()
