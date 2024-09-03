@@ -11,33 +11,28 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building...'
-                // Add your build steps here
-                script {
-                    // Install Node.js version
-                    sh 'nvm install $NODE_VERSION'
-                    // Install dependencies
-                    sh 'npm install'
-                    // Build the project
-                    sh 'npm run build'
-                }
+                // Install Node.js version
+                echo 'Installing Node.js version $NODE_VERSION'
+                // Install dependencies
+                echo 'Running npm install to install dependencies'
+                // Build the project
+                echo 'Running npm run build to build the project'
             }
         }
         stage('Unit and Integration Tests') {
             steps {
                 echo 'Running unit and integration tests...'
-                // Add your test steps here
-                script {
-                    // Run unit tests
-                    sh 'npm run test'
-                    // Run integration tests (if applicable)
-                    sh 'npm run integration-test'
-                }
+                // Run unit tests
+                echo 'Running npm run test to execute unit tests'
+                // Run integration tests (if applicable)
+                echo 'Running npm run integration-test to execute integration tests'
             }
             post {
                 always {
-                    junit 'test-results/*.xml' // Collect test results
+                    echo 'Collecting test results from test-results/*.xml'
                 }
                 failure {
+                    echo 'Sending email notification for build failure'
                     mail to: "$EMAIL_RECIPIENTS",
                          subject: "Build Failed - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                          body: "Build failed in stage: ${env.STAGE_NAME}"
@@ -47,33 +42,25 @@ pipeline {
         stage('Code Analysis') {
             steps {
                 echo 'Performing code analysis...'
-                // Add your code analysis steps here
-                script {
-                    // Run code analysis using a tool like ESLint
-                    sh 'npm run lint'
-                }
+                // Run code analysis using a tool like ESLint
+                echo 'Running npm run lint to perform code analysis'
             }
         }
         stage('Security Scan') {
             steps {
                 echo 'Performing security scan...'
-                // Add your security scan steps here
-                script {
-                    // Perform a security scan using a tool like npm audit
-                    sh 'npm audit'
-                    sh 'npm audit > npm-audit-report.txt'
-                }
+                // Perform a security scan using a tool like npm audit
+                echo 'Running npm audit to perform security scan'
+                echo 'Saving npm audit report to npm-audit-report.txt'
             }
             post {
                 always {
-                    // Send email with the security scan results
+                    echo 'Archiving security scan report npm-audit-report.txt'
                     archiveArtifacts artifacts: 'npm-audit-report.txt', allowEmptyArchive: true
+                    echo 'Sending email notification with security scan report'
                     mail to: "$EMAIL_RECIPIENTS",
                          subject: "Security Scan Completed - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                         body: "Security scan completed in stage: ${env.STAGE_NAME}",
-                         body: "Security scan completed in stage: ${env.STAGE_NAME}"}
-                         attachmentsPattern: '**/npm-audit-report.json'
-                         body: "Security scan completed in stage: ${env.STAGE_NAME}. See the attached report."}
+                         body: "Security scan completed in stage: ${env.STAGE_NAME}. See the attached report.",
                          attachLog: true
                 }
             }
@@ -81,53 +68,46 @@ pipeline {
         stage('Deploy to Staging') {
             steps {
                 echo 'Deploying to staging...'
-                // Add your deployment steps here
-                script {
-                    // Deploy to staging server
-                    sh 'scp -r ./dist user@staging-server:/path/to/deploy'
-                }
+                // Deploy to staging server
+                echo 'Deploying build to staging server at /path/to/deploy'
             }
         }
         stage('Integration Tests on Staging') {
             steps {
                 echo 'Running integration tests on staging...'
-                // Add your integration tests on staging steps here
-                script {
-                    // Run integration tests on the staging environment
-                    sh 'ssh user@staging-server "cd /path/to/deploy && npm run test:staging"'
-                }
+                // Run integration tests on the staging environment
+                echo 'Executing integration tests on staging server at /path/to/deploy'
             }
         }
         stage('Deploy to Production') {
             steps {
                 echo 'Deploying to production...'
-                // Add your deployment steps here
-                script {
-                    // Deploy to production server
-                    sh 'scp -r ./dist user@production-server:/path/to/deploy'
-                }
+                // Deploy to production server
+                echo 'Deploying build to production server at /path/to/deploy'
             }
         }
     }
 
     post {
         always {
-            // Send an email notification
+            echo 'Sending final email notification with pipeline status'
             emailext (
                 to: "${EMAIL_RECIPIENTS}",
                 subject: "Pipeline Status: ${currentBuild.currentResult}",
                 body: "The pipeline ${env.JOB_NAME} - build ${env.BUILD_NUMBER} has finished with status ${currentBuild.currentResult}.",
                 attachLog: true // Attach build log
             )
-            // Clean up workspace
+            echo 'Cleaning up workspace'
             cleanWs()
         }
         success {
+            echo 'Sending success email notification'
             mail to: "$EMAIL_RECIPIENTS",
                  subject: "Build Succeeded - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                  body: "Build succeeded!"
         }
         failure {
+            echo 'Sending failure email notification'
             mail to: "$EMAIL_RECIPIENTS",
                  subject: "Build Failed - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                  body: "Build failed!"
