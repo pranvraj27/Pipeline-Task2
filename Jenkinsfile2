@@ -2,98 +2,95 @@ pipeline {
     agent any
 
     environment {
-        NODE_VERSION = '14.x'
-        EMAIL_RECIPIENTS = 'pranav27rajans@gmail.com'
+        RECIPIENT_EMAIL = 'pranav27rajans@gmail.com'
     }
 
     stages {
         stage('Build') {
             steps {
-                echo 'Building the project...'
-                echo 'Using Node.js version: $NODE_VERSION'
-                echo 'Installing dependencies...'
-                echo 'Running build process...'
+                echo 'Task: Build the application'
+                echo 'Tool: Node.js'
+                sleep time: 10, unit: 'SECONDS'
             }
         }
-        stage('Unit and Integration Tests') {
+        stage('Run Unit and Integration Tests') {
             steps {
-                echo 'Running unit tests...'
-                echo 'Running integration tests...'
+                echo 'Task: Run Unit and Integration Tests'
+                echo 'Tool: npm (Jest for unit tests)'
+                sleep time: 10, unit: 'SECONDS'
             }
             post {
                 always {
-                    echo 'Collecting test results...'
-                }
-                failure {
-                    mail to: "$EMAIL_RECIPIENTS",
-                         subject: "Build Failed - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                         body: "Build failed in stage: ${env.STAGE_NAME}"
+                    script {
+                        sendEmail('Run Unit and Integration Tests')
+                    }
                 }
             }
         }
         stage('Code Analysis') {
             steps {
-                echo 'Performing code analysis...'
-                echo 'Running ESLint...'
+                echo 'Task: Perform Code Analysis'
+                echo 'Tool: ESLint'
+                sleep time: 10, unit: 'SECONDS'
             }
         }
         stage('Security Scan') {
             steps {
-                echo 'Performing security scan...'
-                echo 'Running npm audit...'
-                echo 'Generating security report...'
+                echo 'Task: Perform Security Scan'
+                echo 'Tool: npm audit'
+                sleep time: 10, unit: 'SECONDS'
             }
             post {
                 always {
-                    echo 'Archiving security scan report...'
-                   emailext(
-                    to: "$EMAIL_RECIPIENTS",
-                    subject: "Security Scan Completed - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                    body: "Security scan completed in stage: ${env.STAGE_NAME}. See the attached report.",
-                    attachLog: true
-                    )
+                    script {
+                        sendEmail('Security Scan')
+                    }
                 }
             }
         }
         stage('Deploy to Staging') {
             steps {
-                echo 'Deploying to staging environment...'
+                echo 'Task: Deploy to Staging Environment'
+                echo 'Tool: SCP (Secure Copy Protocol)'
+                sleep time: 10, unit: 'SECONDS'
             }
         }
-        stage('Integration Tests on Staging') {
+        stage('Run Integration Tests on Staging') {
             steps {
-                echo 'Running integration tests on staging environment...'
+                echo 'Task: Run Integration Tests on Staging'
+                echo 'Tool: npm (Jest for integration tests)'
+                sleep time: 10, unit: 'SECONDS'
+            }
+        }
+        stage('Approval for Production Deployment') {
+            steps {
+                echo 'Task: Request Manual Approval for Production Deployment'
+                echo 'Tool: Jenkins Manual Input Step'
+                sleep time: 10, unit: 'SECONDS'
             }
         }
         stage('Deploy to Production') {
             steps {
-                echo 'Deploying to production environment...'
+                echo 'Task: Deploy to Production Environment'
+                echo 'Tool: SCP (Secure Copy Protocol)'
+                sleep time: 10, unit: 'SECONDS'
             }
         }
     }
+
     post {
         always {
-            echo 'Pipeline completed. Sending final status email...'
-            emailext (
-                to: "${EMAIL_RECIPIENTS}",
-                subject: "Pipeline Status: ${currentBuild.currentResult}",
-                body: "The pipeline ${env.JOB_NAME} - build ${env.BUILD_NUMBER} has finished with status ${currentBuild.currentResult}.",
-                attachLog: true // Attach build log
-            )
-            echo 'Cleaning up workspace...'
-            cleanWs()
-        }
-        success {
-            echo 'Build succeeded. Sending success email...'
-            mail to: "$EMAIL_RECIPIENTS",
-                 subject: "Build Succeeded - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                 body: "Build succeeded!"
-        }
-        failure {
-            echo 'Build failed. Sending failure email...'
-            mail to: "$EMAIL_RECIPIENTS",
-                 subject: "Build Failed - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                 body: "Build failed!"
+            echo 'Task: Send Build Notifications'
+            echo 'Tools: Email'
         }
     }
+}
+
+def sendEmail(stageName) {
+    emailext (
+        subject: "Jenkins Pipeline: ${stageName} Stage ${currentBuild.currentResult}",
+        body: "The ${stageName} stage in Jenkins build ${env.BUILD_NUMBER} finished with status: ${currentBuild.currentResult}. Please see the attached logs for details.",
+        to: "${env.RECIPIENT_EMAIL}",
+        attachLog: true
+    )
 }
